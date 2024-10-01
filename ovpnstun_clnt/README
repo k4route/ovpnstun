@@ -1,2 +1,3 @@
 docker build -t k4r/ovst_c:0.7 .
+docker run -it -d --rm --privileged k4r/ovst_c:0.8
 
