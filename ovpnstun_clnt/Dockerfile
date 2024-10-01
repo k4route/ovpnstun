@@ -4,6 +4,7 @@ MAINTAINER k4
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt clean && apt -y update && apt install -y --no-install-recommends vim openvpn stunnel4 iptables && \
+	apt install -y traceroute net-tools iputils-ping tcpdump && \
     mkdir -p /dev/net && \
     mknod /dev/net/tun c 10 200 && \
     chmod 600 /dev/net/tun 	

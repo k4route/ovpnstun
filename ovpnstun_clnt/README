@@ -1,0 +1,2 @@
+docker build -t k4r/ovst_c:0.7 .
+
