@@ -1,3 +1,50 @@
+# Add GW IP address to startup.sh route 
+# and stunnel.conf
+
 docker build -t k4r/ovst_c:0.7 .
 docker run -it -d --rm --privileged k4r/ovst_c:0.8
 
+# Work notes below:
+# 10/2/2024
+
+put VPN client container in the same network as Laptop
+
+try macvlan
+result: cnt does not see any external host and docker host too
+no way to ping even from docker host/hypervisor host (Virtual Box on Windows laptop)
+
+docker network create -d macvlan -o parent=enp0s3 -o macvlan_mode=bridge \
+  --subnet 192.168.2.0/24 \
+  --gateway 192.168.2.1 \
+  --ip-range 192.168.2.192/27 \
+  net2
+  
+to see docker host:
+
+ip link add mynet-shim link enp0s3 type ipvlan mode l2
+ip addr add 192.168.2.193/32 dev mynet-shim
+ip link set mynet-shim up
+ip route add 192.168.2.192/27 dev mynet-shim
+  
+docker run -it --rm --network=ipvnet2 --privileged k4r/ovst_c:0.9
+docker run -it --rm --network=net2 --privileged ubuntu
+
+docker network create -d macvlan -o parent=enp0s3 \
+  --subnet 192.168.3.0/24 \
+  --gateway 192.168.3.1 \
+  --ip-range 192.168.3.192/27 \
+  net3
+
+try ipvlan
+result: it works. Tunnels are up. Once I set container as GW for Laptop (VBox hypervisor) it can not reach cnt IP for some reason. Reaserching on that. Going to install ubuntu on bare metal and try the same setup.
+
+docker network create -d ipvlan --subnet=192.168.2.0/24 --gateway=192.168.2.1 --ip-range 192.168.2.192/27 -o ipvlan_mode=l2 -o parent=enp0s3 ipvnet2
+
+docker network create -d ipvlan \
+    --subnet=192.168.3.0/24 \
+    --gateway=192.168.3.1 \
+    --ip-range 192.168.3.192/27 	
+    -o ipvlan_mode=l2 \
+    -o parent=eth0 ipvnet3
+	
+docker run -it --rm --network=net3 k4r/ovst_s:0.3 bash
