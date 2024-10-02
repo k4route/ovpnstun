@@ -1,5 +1,5 @@
 # This is the network config written by 'subiquity'
-# network:
+network:
   ethernets:
     enp0s3:
       dhcp4: false
